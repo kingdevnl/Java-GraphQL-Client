@@ -1,5 +1,7 @@
 package nl.kingdev.graphqlclient;
 
+
+import lombok.ToString;
 import nl.kingdev.graphqlclient.query.Query;
 import org.junit.Test;
 
@@ -94,6 +96,12 @@ public class ClientTest {
         assertEquals("Sincere@april.biz", user.getEmail());
 
     }
+
+    @ToString
+    static class Photo {
+        private String id, url;
+    }
+
 
     private Client makeClient() {
         return new Client(uri);

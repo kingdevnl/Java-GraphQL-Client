@@ -1,47 +1,43 @@
 package nl.kingdev.graphqlclient.util;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.URI;
-import java.net.URL;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.Map;
 
 public class HttpUtil {
 
-    private static String urlEncode(String inURL) throws Exception {
-        URL url = new URL(inURL);
-        return new URI(url.getProtocol(), url.getUserInfo(), url.getHost(), url.getPort(),
-                url.getPath(), url.getQuery(), url.getRef()).toASCIIString();
-    }
 
     public static String post(String requestURL, String payload, Map<String, String> headers) throws Exception {
-        URL url = new URL(urlEncode(requestURL));
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        CloseableHttpClient client = HttpClients.createDefault();
 
-        connection.setDoInput(true);
-        connection.setDoOutput(true);
-        connection.setRequestMethod("POST");
-        connection.setRequestProperty("Accept", "application/json");
-        connection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
-        headers.forEach(connection::setRequestProperty);
+        HttpPost post = new HttpPost(requestURL);
+        StringEntity stringEntity = new StringEntity(payload);
+        headers.forEach(post::setHeader);
+        post.setEntity(stringEntity);
+        post.setHeader("Accept", "application/json");
+        post.setHeader("Content-type", "application/json");
 
-        OutputStreamWriter streamWriter = new OutputStreamWriter(connection.getOutputStream(), "UTF-8");
-        streamWriter.write(payload);
-        streamWriter.close();
+        HttpResponse response = client.execute(post);
 
-        BufferedReader bufferedReader = new BufferedReader(
-                new InputStreamReader(connection.getInputStream()));
-        StringBuffer response = new StringBuffer();
-        String line;
-        while ((line = bufferedReader.readLine()) != null) {
-            response.append(line);
+        byte[] bytes = response.getEntity().getContent().readAllBytes();
+        String body = new String(bytes, Charset.defaultCharset());
+        if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+            Gson gson = new GsonBuilder().create();
+            JsonObject error = gson.fromJson(body, JsonObject.class);
+            throw new IOException("Error while doing post request " + requestURL + " "+ payload + "\r\nStatusCode: " + response.getStatusLine().getStatusCode() + " \r\nError: " + error.get("errors"));
         }
 
-        bufferedReader.close();
-        connection.disconnect();
-
-        return response.toString();
+        client.close();
+        return body;
     }
 }

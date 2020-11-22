@@ -23,7 +23,7 @@ pipeline {
             steps {
                 sh './gradlew build'
                 sh './gradlew publish'
-                archiveArtifacts artifacts: 'builds/libs/*.jar', fingerprint: true
+                archiveArtifacts artifacts: 'build/libs/*.jar', fingerprint: true
             }
         }
     }

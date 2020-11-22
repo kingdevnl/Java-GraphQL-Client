@@ -50,7 +50,7 @@ public class Client {
         return null;
     }
 
-    public <T> List<T> query(Query query, String name, Class<T> type) {
+    public <T> List<T> query(Query query, String name) {
 
         try {
             JsonObject request = makeQueryJson(query);

@@ -58,7 +58,7 @@ public class ClientTest {
     @Test
     public void query() {
         Client client = new Client("https://api.mocki.io/v1/44cb3920");
-        List<Todo> getTodos = client.query(new Query("query todos {getTodos {id, description, done}}"), "getTodos", Todo.class);
+        List<Todo> getTodos = client.query(new Query("query todos {getTodos {id, description, done}}"), "getTodos");
         assertNotNull(getTodos);
         assertTrue(getTodos.size() > 1);
     }

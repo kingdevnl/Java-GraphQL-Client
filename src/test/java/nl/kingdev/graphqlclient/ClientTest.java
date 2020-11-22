@@ -30,7 +30,7 @@ public class ClientTest {
         Client client = makeClient();
         User user = client.first(
                 new Query("query user($id: ID!) { user(id: $id) { id, name, email } }")
-                .setVariable("id", "1"),
+                        .setVariable("id", "1"),
                 "user",
                 User.class
         );
@@ -40,6 +40,7 @@ public class ClientTest {
         assertEquals("Sincere@april.biz", user.getEmail());
 
     }
+
     @Test
     public void testGlobalVariable() {
         Client client = makeClient();
@@ -54,6 +55,7 @@ public class ClientTest {
         assertEquals("Leanne Graham", user.getName());
         assertEquals("Sincere@april.biz", user.getEmail());
     }
+
 
     private class Todo {
         String id, description;

@@ -58,7 +58,8 @@ public class Client {
             JsonObject request = makeQueryJson(query);
             JsonObject result = gson.fromJson(HttpUtil.post(this.uri, request.toString(), headers), JsonObject.class);
             JsonArray array = result.get("data").getAsJsonObject().get(name).getAsJsonArray();
-            return gson.fromJson(array, new TypeToken<T>() {}.getType());
+            return gson.fromJson(array, new TypeToken<T>() {
+            }.getType());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -79,6 +80,7 @@ public class Client {
         this.headers.put(name, value);
         return this;
     }
+
     public Client setGlobalVariable(String name, String value) {
         this.globalVariables.put(name, value);
         return this;
@@ -88,6 +90,7 @@ public class Client {
         this.headers.remove(name);
         return this;
     }
+
     public Client removeGlobalVariable(String name) {
         this.globalVariables.remove(name);
         return this;

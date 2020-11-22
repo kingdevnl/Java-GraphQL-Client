@@ -25,23 +25,6 @@ public class Query {
     }
 
 
-    public static Query fromFile(InputStream file) {
-        byte[] bytes;
-        try {
-            bytes = file.readAllBytes();
-            return new Query(new String(bytes, Charset.defaultCharset()));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-    public static Query fromFile(Class owner, String file) {
-        return fromFile(owner.getResourceAsStream(file));
-    }
-    public static Query fromFile(Object owner, String file) {
-        return fromFile(owner.getClass().getResourceAsStream(file));
-    }
-
     private Map<String, Object> variables = new HashMap<>();
 
     public Query setVariable(String name, Object value) {
@@ -54,4 +37,22 @@ public class Query {
         return this;
     }
 
+    public static Query fromFile(InputStream file) {
+        byte[] bytes;
+        try {
+            bytes = file.readAllBytes();
+            return new Query(new String(bytes, Charset.defaultCharset()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static Query fromFile(String file) {
+        return fromFile(Query.class.getResourceAsStream(file));
+    }
+
+    public static Query fromFile(Object owner, String file) {
+        return fromFile(owner.getClass().getResourceAsStream(file));
+    }
 }

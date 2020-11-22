@@ -1,14 +1,33 @@
 plugins {
     id 'java'
+    id 'maven-publish'
 }
 
-group 'nl.kingdev.graphql-client'
-version '1.0-SNAPSHOT'
+group 'nl.kingdev.graphqlclient'
+version '1.0'
+def ENV = System.getenv()
+version = version + "-" + (ENV.BUILD_NUMBER ? ("build." + ENV.GIT_HASH) : "custom")
 
 repositories {
     mavenCentral()
 }
-
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            name "KingdevNL"
+            url "https://nexus.kingdev.nl/repository/maven/"
+            credentials {
+                username System.getenv("REG_CREDS_USR")
+                password System.getenv("REG_CREDS_PSW")
+            }
+        }
+    }
+}
 dependencies {
 
     // https://mvnrepository.com/artifact/com.google.code.gson/gson

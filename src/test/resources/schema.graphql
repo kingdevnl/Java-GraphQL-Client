@@ -215,6 +215,7 @@ type Query {
   todo(id: ID!): Todo
   users(options: PageQueryOptions): UsersPage
   user(id: ID!): User
+  getTodos: [Todo]
 }
 
 input SearchOptions {
@@ -237,12 +238,13 @@ enum SortOrderEnum {
   DESC
 }
 
+
 type Todo {
-  id: ID
-  title: String
-  completed: Boolean
-  user: User
+  id: String
+  description: String
+  done: Boolean
 }
+
 
 type TodosPage {
   data: [Todo]

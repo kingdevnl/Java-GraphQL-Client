@@ -3,8 +3,9 @@ package nl.kingdev.graphqlclient;
 import nl.kingdev.graphqlclient.query.Query;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import java.util.List;
+
+import static org.junit.Assert.*;
 
 public class ClientTest {
 
@@ -25,9 +26,9 @@ public class ClientTest {
     }
 
     @Test
-    public void query() {
+    public void queryOne() {
         Client client = makeClient();
-        User user = client.query(
+        User user = client.first(
                 new Query("query user($id: ID!) { user(id: $id) { id, name, email } }")
                 .setVariable("id", "1"),
                 "user",
@@ -39,6 +40,29 @@ public class ClientTest {
         assertEquals("Sincere@april.biz", user.getEmail());
 
     }
+
+    private class Todo {
+        String id, description;
+        boolean completed;
+
+        @Override
+        public String toString() {
+            return "Todo{" +
+                    "id='" + id + '\'' +
+                    ", description='" + description + '\'' +
+                    ", completed=" + completed +
+                    '}';
+        }
+    }
+
+    @Test
+    public void query() {
+        Client client = new Client("https://api.mocki.io/v1/44cb3920");
+        List<Todo> getTodos = client.query(new Query("query todos {getTodos {id, description, done}}"), "getTodos", Todo.class);
+        assertNotNull(getTodos);
+        assertTrue(getTodos.size() > 1);
+    }
+
     private Client makeClient() {
         return new Client(uri);
     }

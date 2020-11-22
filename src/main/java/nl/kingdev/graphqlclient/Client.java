@@ -2,11 +2,15 @@ package nl.kingdev.graphqlclient;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
 import nl.kingdev.graphqlclient.query.Query;
 import nl.kingdev.graphqlclient.util.HttpUtil;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -22,7 +26,7 @@ public class Client {
     }
 
 
-    public <T> T query(Query query, String name, Class<T> type) {
+    private JsonObject makeQueryJson(Query query) {
         JsonObject request = new JsonObject();
         request.addProperty("query", query.getQuery());
 
@@ -30,7 +34,13 @@ public class Client {
         query.getVariables().forEach((k, v) -> variables.addProperty(k, v.toString()));
         request.add("variables", variables);
 
+        return request;
+    }
+
+    public <T> T first(Query query, String name, Class<T> type) {
+
         try {
+            JsonObject request = makeQueryJson(query);
             JsonObject result = gson.fromJson(HttpUtil.post(this.uri, request.toString()), JsonObject.class);
             return gson.fromJson(result.get("data").getAsJsonObject().get(name), type);
         } catch (Exception e) {
@@ -39,6 +49,22 @@ public class Client {
 
         return null;
     }
+
+    public <T> List<T> query(Query query, String name, Class<T> type) {
+
+        try {
+            JsonObject request = makeQueryJson(query);
+            JsonObject result = gson.fromJson(HttpUtil.post(this.uri, request.toString()), JsonObject.class);
+            JsonArray array = result.get("data").getAsJsonObject().get(name).getAsJsonArray();
+            return gson.fromJson(array, new TypeToken<T>(){}.getType());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    return null;
+    }
+
+
 
 
     public String getUri() {

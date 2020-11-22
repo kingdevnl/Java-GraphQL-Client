@@ -24,6 +24,11 @@ public class Query {
         this.variables.put(name, value);
         return this;
     }
+    
+    public Query removeVariable(String name) {
+        this.variables.remove(name);
+        return this;
+    }
 
     @Override
     public String toString() {

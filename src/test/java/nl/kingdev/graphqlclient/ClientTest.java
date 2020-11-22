@@ -40,6 +40,20 @@ public class ClientTest {
         assertEquals("Sincere@april.biz", user.getEmail());
 
     }
+    @Test
+    public void testGlobalVariable() {
+        Client client = makeClient();
+        client.setGlobalVariable("id", "1");
+        User user = client.first(
+                new Query("query user($id: ID!) { user(id: $id) { id, name, email } }"),
+                "user",
+                User.class
+        );
+        assertNotNull("User is null", user);
+        assertEquals("1", user.getId());
+        assertEquals("Leanne Graham", user.getName());
+        assertEquals("Sincere@april.biz", user.getEmail());
+    }
 
     private class Todo {
         String id, description;

@@ -17,11 +17,13 @@ public class Client {
 
     private String uri;
     private Map<String, String> headers;
+    private Map<String, String> globalVariables;
     private static Gson gson = new GsonBuilder().create();
 
     public Client(String uri) {
         this.uri = uri;
         this.headers = new HashMap<>();
+        this.globalVariables = new HashMap<>();
     }
 
 
@@ -39,6 +41,7 @@ public class Client {
     public <T> T first(Query query, String name, Class<T> type) {
 
         try {
+            query.getVariables().putAll(globalVariables);
             JsonObject request = makeQueryJson(query);
             JsonObject result = gson.fromJson(HttpUtil.post(this.uri, request.toString(), headers), JsonObject.class);
             return gson.fromJson(result.get("data").getAsJsonObject().get(name), type);
@@ -50,13 +53,12 @@ public class Client {
     }
 
     public <T> List<T> query(Query query, String name) {
-
         try {
+            query.getVariables().putAll(globalVariables);
             JsonObject request = makeQueryJson(query);
             JsonObject result = gson.fromJson(HttpUtil.post(this.uri, request.toString(), headers), JsonObject.class);
             JsonArray array = result.get("data").getAsJsonObject().get(name).getAsJsonArray();
-            return gson.fromJson(array, new TypeToken<T>() {
-            }.getType());
+            return gson.fromJson(array, new TypeToken<T>() {}.getType());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -76,5 +78,14 @@ public class Client {
     public void setHeader(String name, String value) {
         this.headers.put(name, value);
     }
+    public void setGlobalVariable(String name, String value) {
+        this.globalVariables.put(name, value);
+    }
 
+    public void removeHeader(String name) {
+        this.headers.remove(name);
+    }
+    public void removeGlobalVariable(String name) {
+        this.globalVariables.remove(name);
+    }
 }

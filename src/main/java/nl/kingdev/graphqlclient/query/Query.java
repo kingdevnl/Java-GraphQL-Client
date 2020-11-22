@@ -35,7 +35,9 @@ public class Query {
         }
         return null;
     }
-
+    public static Query fromFile(Class owner, String file) {
+        return fromFile(owner.getResourceAsStream(file));
+    }
     public static Query fromFile(Object owner, String file) {
         return fromFile(owner.getClass().getResourceAsStream(file));
     }

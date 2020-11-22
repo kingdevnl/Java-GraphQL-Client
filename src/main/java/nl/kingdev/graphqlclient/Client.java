@@ -75,17 +75,21 @@ public class Client {
         return headers.get(name);
     }
 
-    public void setHeader(String name, String value) {
+    public Client setHeader(String name, String value) {
         this.headers.put(name, value);
+        return this;
     }
-    public void setGlobalVariable(String name, String value) {
+    public Client setGlobalVariable(String name, String value) {
         this.globalVariables.put(name, value);
+        return this;
     }
 
-    public void removeHeader(String name) {
+    public Client removeHeader(String name) {
         this.headers.remove(name);
+        return this;
     }
-    public void removeGlobalVariable(String name) {
+    public Client removeGlobalVariable(String name) {
         this.globalVariables.remove(name);
+        return this;
     }
 }

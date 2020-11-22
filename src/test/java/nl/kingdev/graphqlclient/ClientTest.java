@@ -79,6 +79,22 @@ public class ClientTest {
         assertTrue(getTodos.size() > 1);
     }
 
+    @Test
+    public void file() {
+        Client client = makeClient();
+        User user = client.first(
+                Query.fromFile(this, "/users.graphql")
+                        .setVariable("id", "1"),
+                "user",
+                User.class
+        );
+        assertNotNull("User is null", user);
+        assertEquals("1", user.getId());
+        assertEquals("Leanne Graham", user.getName());
+        assertEquals("Sincere@april.biz", user.getEmail());
+
+    }
+
     private Client makeClient() {
         return new Client(uri);
     }

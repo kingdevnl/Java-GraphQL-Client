@@ -8,7 +8,6 @@ import com.google.gson.reflect.TypeToken;
 import nl.kingdev.graphqlclient.query.Query;
 import nl.kingdev.graphqlclient.util.HttpUtil;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +40,7 @@ public class Client {
 
         try {
             JsonObject request = makeQueryJson(query);
-            JsonObject result = gson.fromJson(HttpUtil.post(this.uri, request.toString()), JsonObject.class);
+            JsonObject result = gson.fromJson(HttpUtil.post(this.uri, request.toString(), headers), JsonObject.class);
             return gson.fromJson(result.get("data").getAsJsonObject().get(name), type);
         } catch (Exception e) {
             e.printStackTrace();
@@ -54,17 +53,16 @@ public class Client {
 
         try {
             JsonObject request = makeQueryJson(query);
-            JsonObject result = gson.fromJson(HttpUtil.post(this.uri, request.toString()), JsonObject.class);
+            JsonObject result = gson.fromJson(HttpUtil.post(this.uri, request.toString(), headers), JsonObject.class);
             JsonArray array = result.get("data").getAsJsonObject().get(name).getAsJsonArray();
-            return gson.fromJson(array, new TypeToken<T>(){}.getType());
+            return gson.fromJson(array, new TypeToken<T>() {
+            }.getType());
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-    return null;
+        return null;
     }
-
-
 
 
     public String getUri() {

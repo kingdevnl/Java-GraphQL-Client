@@ -7,6 +7,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.util.Map;
 
 public class HttpUtil {
 
@@ -16,7 +17,7 @@ public class HttpUtil {
                 url.getPath(), url.getQuery(), url.getRef()).toASCIIString();
     }
 
-    public static String post(String requestURL, String payload) throws Exception {
+    public static String post(String requestURL, String payload, Map<String, String> headers) throws Exception {
         URL url = new URL(urlEncode(requestURL));
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
@@ -25,6 +26,7 @@ public class HttpUtil {
         connection.setRequestMethod("POST");
         connection.setRequestProperty("Accept", "application/json");
         connection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+        headers.forEach(connection::setRequestProperty);
 
         OutputStreamWriter streamWriter = new OutputStreamWriter(connection.getOutputStream(), "UTF-8");
         streamWriter.write(payload);

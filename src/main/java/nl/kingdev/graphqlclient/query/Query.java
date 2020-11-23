@@ -1,14 +1,12 @@
 package nl.kingdev.graphqlclient.query;
 
+import com.google.gson.JsonObject;
 import lombok.Getter;
 import lombok.ToString;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Queue;
 
 @Getter
 @ToString
@@ -25,10 +23,15 @@ public class Query {
     }
 
 
-    private Map<String, Object> variables = new HashMap<>();
+    private JsonObject variables = new JsonObject();
 
-    public Query setVariable(String name, Object value) {
-        this.variables.put(name, value);
+    public Query setVariable(String name, String value) {
+        this.variables.addProperty(name, value);
+        return this;
+    }
+
+    public Query setVariable(String name, JsonObject value) {
+        this.variables.add(name, value);
         return this;
     }
 

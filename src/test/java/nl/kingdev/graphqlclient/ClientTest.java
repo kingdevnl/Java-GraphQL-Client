@@ -30,12 +30,13 @@ public class ClientTest {
     @Test
     public void queryOne() {
         Client client = makeClient();
-        User user = client.first(
-                new Query("query user($id: ID!) { user(id: $id) { id, name, email } }")
-                        .setVariable("id", "1"),
-                "user",
-                User.class
-        );
+        User user = client.query(new Query("query user($id: ID!) { user(id: $id) { id, name, email } }")
+                .setVariable("id", "1"))
+                .first("user", User.class);
+
+
+        System.out.println(user);
+
         assertNotNull("User is null", user);
         assertEquals("1", user.getId());
         assertEquals("Leanne Graham", user.getName());
@@ -47,11 +48,8 @@ public class ClientTest {
     public void testGlobalVariable() {
         Client client = makeClient();
         client.setGlobalVariable("id", "1");
-        User user = client.first(
-                new Query("query user($id: ID!) { user(id: $id) { id, name, email } }"),
-                "user",
-                User.class
-        );
+        User user = client.query(new Query("query user($id: ID!) { user(id: $id) { id, name, email } }"))
+                .first("user", User.class);
         assertNotNull("User is null", user);
         assertEquals("1", user.getId());
         assertEquals("Leanne Graham", user.getName());
@@ -76,7 +74,7 @@ public class ClientTest {
     @Test
     public void query() {
         Client client = new Client("https://api.mocki.io/v1/44cb3920");
-        List<Todo> getTodos = client.query(new Query("query todos {getTodos {id, description, done}}"), "getTodos");
+        List<Todo> getTodos = client.query(new Query("query todos {getTodos {id, description, done}}")).get("getTodos");
         assertNotNull(getTodos);
         assertTrue(getTodos.size() > 1);
     }
@@ -84,12 +82,11 @@ public class ClientTest {
     @Test
     public void file() {
         Client client = makeClient();
-        User user = client.first(
+        User user = client.query(
                 Query.fromFile(this, "/users.graphql")
-                        .setVariable("id", "1"),
-                "user",
-                User.class
-        );
+                        .setVariable("id", "1")
+        ).first("user", User.class);
+
         assertNotNull("User is null", user);
         assertEquals("1", user.getId());
         assertEquals("Leanne Graham", user.getName());

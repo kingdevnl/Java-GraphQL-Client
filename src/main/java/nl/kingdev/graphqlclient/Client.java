@@ -19,6 +19,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 public class Client {
@@ -26,6 +29,7 @@ public class Client {
     private String uri;
     private Map<String, String> headers;
     private JsonObject globalVariables;
+    private ExecutorService executorService;
     private WebSocketClient webSocketClient;
     private int subscriptionID = 1;
     private List<Subscription> subscriptions = new ArrayList<>();
@@ -76,6 +80,32 @@ public class Client {
         return null;
     }
 
+    /**
+     * async queries the graphql server with the provided
+     *
+     * @param query The query to execute
+     * @return Result
+     */
+    public CompletableFuture<Result> queryAsync(Query query) {
+        if (this.executorService != null) {
+            CompletableFuture<Result> future = new CompletableFuture<>();
+
+            this.executorService.submit(() -> {
+                future.complete(this.query(query));
+            });
+
+            return future;
+        }
+        System.err.println("Failed to submit async query, Be sure to call Client#setupMultithreading first!");
+        return null;
+    }
+
+    public void setupMultithreading(int numOfThreads) {
+        this.executorService = Executors.newFixedThreadPool(numOfThreads);
+    }
+    public void closeMultithreading() {
+        this.executorService.shutdown();
+    }
 
     /**
      * Creates a websocket to be used for subscriptions (Live data)

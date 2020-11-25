@@ -59,9 +59,12 @@ public class Client {
         return request;
     }
 
-    /** queries the graphql server with the provided
-     * @param query         The query to execute
-     * @return Result */
+    /**
+     * queries the graphql server with the provided
+     *
+     * @param query The query to execute
+     * @return Result
+     */
     public Result query(Query query) {
         try {
             JsonObject request = makeQueryJson(query);
@@ -74,7 +77,9 @@ public class Client {
     }
 
 
-    /** Creates a websocket to be used for subscriptions (Live data) */
+    /**
+     * Creates a websocket to be used for subscriptions (Live data)
+     */
     public void setupWebsocket(IReadyCallback readyCallback, ICloseCallback closeCallback) {
         try {
             this.webSocketClient = new WebSocketClient(new URI(this.uri), new GraphQLDraft()) {
@@ -114,9 +119,12 @@ public class Client {
         this.webSocketClient.connect();
     }
 
-    /** Subscribe to a live data feed with the provided query and callback
-     * @param query         The query for the subscription
-     * @param  callback     The callback to be called for incoming data*/
+    /**
+     * Subscribe to a live data feed with the provided query and callback
+     *
+     * @param query    The query for the subscription
+     * @param callback The callback to be called for incoming data
+     */
     public void subscribe(Query query, ISubscriptionDataCallback callback) {
         if (this.webSocketClient != null) {
             this.webSocketClient.send(new JsonBuilder()
@@ -131,7 +139,10 @@ public class Client {
 
         }
     }
-    /**Closes all the Subscriptions and the websocket */
+
+    /**
+     * Closes all the Subscriptions
+     */
     public void closeSubscriptions() {
         if (this.webSocketClient != null) {
             subscriptions.forEach(subscription -> {
@@ -140,9 +151,18 @@ public class Client {
                         .append("type", "stop")
                         .toString());
             });
-            this.webSocketClient.close();
         } else {
             System.err.println("Failed to closeSubscriptions, There was no websocket setup, Be sure to call Client#setupWebsocket");
+        }
+    }
+
+    /**
+     * Closes the websocket
+     */
+    public void closeWebsocket() {
+        closeSubscriptions();
+        if (this.webSocketClient != null) {
+            this.webSocketClient.close();
         }
     }
 

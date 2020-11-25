@@ -7,11 +7,11 @@ import nl.kingdev.graphqlclient.Client;
 
 import java.util.List;
 
-public class QueryResult {
+public class Result {
 
     private JsonObject result;
 
-    public QueryResult(JsonObject result) {
+    public Result(JsonObject result) {
         this.result = result;
     }
 
@@ -21,5 +21,9 @@ public class QueryResult {
     public <T> List<T> get(String name) {
         JsonArray array = result.get(name).getAsJsonArray();
         return Client.getGson().fromJson(array, new TypeToken<T>() {}.getType());
+    }
+
+    public JsonObject getRawJson() {
+        return result;
     }
 }

@@ -6,6 +6,7 @@ import nl.kingdev.graphqlclient.query.Query;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.Assert.*;
 
@@ -55,25 +56,7 @@ public class ClientTest {
         assertEquals("Leanne Graham", user.getName());
         assertEquals("Sincere@april.biz", user.getEmail());
     }
-
-    @Test
-    public void testAsync() {
-        Client client = makeClient();
-        client.setupMultithreading(4);
-        client.setGlobalVariable("id", "1");
-
-
-        client.queryAsync(new Query("query user($id: ID!) { user(id: $id) { id, name, email } }")).whenComplete((result, throwable) -> {
-           User user = result.first("user", User.class);
-            assertNotNull("User is null", user);
-            assertEquals("1", user.getId());
-            assertEquals("Leanne Graham", user.getName());
-            assertEquals("Sincere@april.biz", user.getEmail());
-
-            client.closeMultithreading();
-        });
-    }
-
+    
 
     private class Todo {
         String id, description;

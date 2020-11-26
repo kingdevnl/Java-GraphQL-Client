@@ -15,10 +15,7 @@ import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -33,6 +30,7 @@ public class Client {
     private WebSocketClient webSocketClient;
     private int subscriptionID = 1;
     private List<Subscription> subscriptions = new ArrayList<>();
+    private HttpUtil httpUtil = new HttpUtil();
     private static Gson gson = new GsonBuilder().create();
 
 
@@ -72,7 +70,7 @@ public class Client {
     public Result query(Query query) {
         try {
             JsonObject request = makeQueryJson(query);
-            return new Result(gson.fromJson(HttpUtil.post(this.uri, request.toString(), headers), JsonObject.class).get("data").getAsJsonObject());
+            return new Result(gson.fromJson(this.httpUtil.post(this.uri, request.toString(), headers), JsonObject.class).get("data").getAsJsonObject());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -102,9 +100,6 @@ public class Client {
 
     public void setupMultithreading(int numOfThreads) {
         this.executorService = Executors.newFixedThreadPool(numOfThreads);
-    }
-    public void closeMultithreading() {
-        this.executorService.shutdown();
     }
 
     /**
@@ -155,19 +150,21 @@ public class Client {
      * @param query    The query for the subscription
      * @param callback The callback to be called for incoming data
      */
-    public void subscribe(Query query, ISubscriptionDataCallback callback) {
+    public Subscription subscribe(Query query, ISubscriptionDataCallback callback) {
         if (this.webSocketClient != null) {
             this.webSocketClient.send(new JsonBuilder()
                     .append("id", subscriptionID)
                     .append("type", "start")
                     .append("payload", makeQueryJson(query))
                     .toString());
-            subscriptions.add(new Subscription(subscriptionID, callback));
+            Subscription subscription = new Subscription(webSocketClient, subscriptionID, callback);
+            subscriptions.add(subscription);
             subscriptionID++;
-        } else {
-            System.err.println("Failed to subscribe, There was no websocket setup, Be sure to call Client#setupWebsocket");
-
+            return subscription;
         }
+        System.err.println("Failed to subscribe, There was no websocket setup, Be sure to call Client#setupWebsocket");
+
+        return null;
     }
 
     /**
@@ -175,25 +172,29 @@ public class Client {
      */
     public void closeSubscriptions() {
         if (this.webSocketClient != null) {
-            subscriptions.forEach(subscription -> {
-                this.webSocketClient.send(new JsonBuilder()
-                        .append("id", subscription.getId())
-                        .append("type", "stop")
-                        .toString());
-            });
+            Iterator<Subscription> iterator = subscriptions.iterator();
+
+            while (iterator.hasNext()) {
+                iterator.next().close();
+                iterator.remove();
+            }
         } else {
             System.err.println("Failed to closeSubscriptions, There was no websocket setup, Be sure to call Client#setupWebsocket");
         }
     }
 
     /**
-     * Closes the websocket
+     * Closes the client
      */
-    public void closeWebsocket() {
+    public void closeClient() {
         closeSubscriptions();
+        if(this.executorService != null) {
+            this.executorService.shutdownNow();
+        }
         if (this.webSocketClient != null) {
             this.webSocketClient.close();
         }
+        this.httpUtil.close();
     }
 
     public String getUri() {
@@ -233,6 +234,4 @@ public class Client {
     public static Gson getGson() {
         return gson;
     }
-
-
 }

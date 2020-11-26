@@ -8,6 +8,7 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 
 import java.io.IOException;
@@ -16,9 +17,10 @@ import java.util.Map;
 
 public class HttpUtil {
 
+    private CloseableHttpClient client = HttpClients.createDefault();
 
-    public static String post(String requestURL, String payload, Map<String, String> headers) throws Exception {
-        CloseableHttpClient client = HttpClients.createDefault();
+
+    public String post(String requestURL, String payload, Map<String, String> headers) throws Exception {
 
         HttpPost post = new HttpPost(requestURL);
         StringEntity stringEntity = new StringEntity(payload);
@@ -37,7 +39,13 @@ public class HttpUtil {
             throw new IOException("Error while doing post request " + requestURL + " "+ payload + "\r\nStatusCode: " + response.getStatusLine().getStatusCode() + " \r\nError: " + error.get("errors"));
         }
 
-        client.close();
         return body;
+    }
+    public void close() {
+        try {
+            client.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

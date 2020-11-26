@@ -4,10 +4,7 @@ package nl.kingdev.graphqlclient;
 import lombok.ToString;
 import nl.kingdev.graphqlclient.query.Query;
 import org.junit.Test;
-
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import static org.junit.Assert.*;
 
 public class ClientTest {
@@ -19,6 +16,7 @@ public class ClientTest {
         Client client = makeClient();
         assertNotNull("Client is null", client);
         assertEquals("Uri is not set", uri, client.getUri());
+        client.closeClient();
     }
 
     @Test
@@ -26,6 +24,7 @@ public class ClientTest {
         Client client = makeClient();
         client.setHeader("auth", "someToken");
         assertEquals("Auth header is not set", "someToken", client.getHeader("auth"));
+        client.closeClient();
     }
 
     @Test
@@ -42,7 +41,7 @@ public class ClientTest {
         assertEquals("1", user.getId());
         assertEquals("Leanne Graham", user.getName());
         assertEquals("Sincere@april.biz", user.getEmail());
-
+        client.closeClient();
     }
 
     @Test
@@ -55,6 +54,7 @@ public class ClientTest {
         assertEquals("1", user.getId());
         assertEquals("Leanne Graham", user.getName());
         assertEquals("Sincere@april.biz", user.getEmail());
+        client.closeClient();
     }
     
 
@@ -78,6 +78,7 @@ public class ClientTest {
         List<Todo> getTodos = client.query(new Query("query todos {getTodos {id, description, done}}")).get("getTodos");
         assertNotNull(getTodos);
         assertTrue(getTodos.size() > 1);
+        client.closeClient();
     }
 
     @Test
@@ -92,7 +93,7 @@ public class ClientTest {
         assertEquals("1", user.getId());
         assertEquals("Leanne Graham", user.getName());
         assertEquals("Sincere@april.biz", user.getEmail());
-
+        client.closeClient();
     }
 
     @ToString

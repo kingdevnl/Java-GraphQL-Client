@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'maven-publish'
+    id 'org.cadixdev.licenser' version '0.5.0'
 }
 
 group 'nl.kingdev.graphqlclient'
@@ -48,4 +49,7 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.16'
     testCompileOnly 'org.projectlombok:lombok:1.18.16'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.16'
+}
+license {
+    header = project.file("LICENSE")
 }

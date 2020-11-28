@@ -264,5 +264,6 @@ public class Client {
                 .append("id", subscription.getId())
                 .append("type", "stop")
                 .toString());
+        this.subscriptions.remove(subscription);
     }
 }

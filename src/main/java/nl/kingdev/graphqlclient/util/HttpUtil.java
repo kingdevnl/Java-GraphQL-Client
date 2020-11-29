@@ -32,7 +32,6 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 
 import java.io.IOException;
@@ -41,10 +40,11 @@ import java.util.Map;
 
 public class HttpUtil {
 
-    private CloseableHttpClient client = HttpClients.createDefault();
+    private final CloseableHttpClient client = HttpClients.createDefault();
 
+    private final Gson gson = new GsonBuilder().create();
 
-    public String post(String requestURL, String payload, Map<String, String> headers) throws Exception {
+    public JsonObject post(String requestURL, String payload, Map<String, String> headers) throws Exception {
 
         HttpPost post = new HttpPost(requestURL);
         StringEntity stringEntity = new StringEntity(payload);
@@ -57,14 +57,16 @@ public class HttpUtil {
 
         byte[] bytes = response.getEntity().getContent().readAllBytes();
         String body = new String(bytes, Charset.defaultCharset());
+
+        JsonObject root = gson.fromJson(body, JsonObject.class);
+
         if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-            Gson gson = new GsonBuilder().create();
-            JsonObject error = gson.fromJson(body, JsonObject.class);
-            throw new IOException("Error while doing post request " + requestURL + " "+ payload + "\r\nStatusCode: " + response.getStatusLine().getStatusCode() + " \r\nError: " + error.get("errors"));
+            throw new IOException(String.format("Error while doing post request %s %s\r\nStatusCode: %d \r\nError: %s", requestURL, payload, response.getStatusLine().getStatusCode(), root.get("errors")));
         }
 
-        return body;
+        return root;
     }
+
     public void close() {
         try {
             client.close();

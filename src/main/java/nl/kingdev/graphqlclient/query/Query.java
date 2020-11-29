@@ -37,31 +37,10 @@ import java.nio.charset.Charset;
 public class Query {
 
     private final String query;
+    private final JsonObject variables = new JsonObject();
 
     public Query(String query) {
         this.query = query;
-    }
-
-    public Query() {
-        this.query = "";
-    }
-
-
-    private JsonObject variables = new JsonObject();
-
-    public Query setVariable(String name, String value) {
-        this.variables.addProperty(name, value);
-        return this;
-    }
-
-    public Query setVariable(String name, JsonObject value) {
-        this.variables.add(name, value);
-        return this;
-    }
-
-    public Query removeVariable(String name) {
-        this.variables.remove(name);
-        return this;
     }
 
     public static Query fromFile(InputStream file) {
@@ -81,5 +60,20 @@ public class Query {
 
     public static Query fromFile(Object owner, String file) {
         return fromFile(owner.getClass().getResourceAsStream(file));
+    }
+
+    public Query setVariable(String name, String value) {
+        this.variables.addProperty(name, value);
+        return this;
+    }
+
+    public Query setVariable(String name, JsonObject value) {
+        this.variables.add(name, value);
+        return this;
+    }
+
+    public Query removeVariable(String name) {
+        this.variables.remove(name);
+        return this;
     }
 }

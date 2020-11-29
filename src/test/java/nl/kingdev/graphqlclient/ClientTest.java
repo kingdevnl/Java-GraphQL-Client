@@ -25,10 +25,11 @@
 package nl.kingdev.graphqlclient;
 
 
-import lombok.ToString;
 import nl.kingdev.graphqlclient.query.Query;
 import org.junit.Test;
+
 import java.util.List;
+
 import static org.junit.Assert.*;
 
 public class ClientTest {
@@ -56,7 +57,7 @@ public class ClientTest {
         Client client = makeClient();
         User user = client.query(new Query("query user($id: ID!) { user(id: $id) { id, name, email } }")
                 .setVariable("id", "1"))
-                .first("user", User.class);
+                .get("user", User.class);
 
 
         System.out.println(user);
@@ -73,28 +74,14 @@ public class ClientTest {
         Client client = makeClient();
         client.setGlobalVariable("id", "1");
         User user = client.query(new Query("query user($id: ID!) { user(id: $id) { id, name, email } }"))
-                .first("user", User.class);
+                .get("user", User.class);
         assertNotNull("User is null", user);
         assertEquals("1", user.getId());
         assertEquals("Leanne Graham", user.getName());
         assertEquals("Sincere@april.biz", user.getEmail());
         client.closeClient();
     }
-    
 
-    private class Todo {
-        String id, description;
-        boolean completed;
-
-        @Override
-        public String toString() {
-            return "Todo{" +
-                    "id='" + id + '\'' +
-                    ", description='" + description + '\'' +
-                    ", completed=" + completed +
-                    '}';
-        }
-    }
 
     @Test
     public void query() {
@@ -111,18 +98,13 @@ public class ClientTest {
         User user = client.query(
                 Query.fromFile(this, "/users.graphql")
                         .setVariable("id", "1")
-        ).first("user", User.class);
+        ).get("user", User.class);
 
         assertNotNull("User is null", user);
         assertEquals("1", user.getId());
         assertEquals("Leanne Graham", user.getName());
         assertEquals("Sincere@april.biz", user.getEmail());
         client.closeClient();
-    }
-
-    @ToString
-    static class Photo {
-        private String id, url;
     }
 
 

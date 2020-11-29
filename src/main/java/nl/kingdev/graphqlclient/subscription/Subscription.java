@@ -25,25 +25,18 @@
 package nl.kingdev.graphqlclient.subscription;
 
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import nl.kingdev.graphqlclient.Client;
 import nl.kingdev.graphqlclient.subscription.callbacks.ISubscriptionDataCallback;
-import nl.kingdev.graphqlclient.util.JsonBuilder;
-import org.java_websocket.WebSocket;
-import org.java_websocket.client.WebSocketClient;
 
 @Getter
+@AllArgsConstructor
 public class Subscription {
 
-    private int id;
-    private ISubscriptionDataCallback callback;
-    private Client client;
-
-    public Subscription(int id, ISubscriptionDataCallback callback,  Client client) {
-        this.id = id;
-        this.callback = callback;
-        this.client = client;
-    }
+    private final int id;
+    private final ISubscriptionDataCallback callback;
+    private final Client client;
 
     public void close() {
         this.client.closeSubscription(this);

@@ -33,21 +33,23 @@ import java.util.List;
 
 public class Result {
 
-    private JsonObject result;
+    private final JsonObject result;
 
     public Result(JsonObject result) {
         this.result = result;
     }
 
-    public <T> T first(String name, Class<T> type) {
+    public <T> T get(String name, Class<T> type) {
         return Client.getGson().fromJson(result.get(name), type);
     }
+
     public <T> List<T> get(String name) {
         JsonArray array = result.get(name).getAsJsonArray();
-        return Client.getGson().fromJson(array, new TypeToken<T>() {}.getType());
+        return Client.getGson().fromJson(array, new TypeToken<T>() {
+        }.getType());
     }
 
-    public JsonObject getRawJson() {
+    public JsonObject getJson() {
         return result;
     }
 }

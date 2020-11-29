@@ -27,18 +27,19 @@ package nl.kingdev.graphqlclient;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
+import lombok.Getter;
 import nl.kingdev.graphqlclient.query.Query;
 import nl.kingdev.graphqlclient.result.Result;
-import nl.kingdev.graphqlclient.subscription.*;
+import nl.kingdev.graphqlclient.subscription.Subscription;
+import nl.kingdev.graphqlclient.subscription.WebsocketClient;
 import nl.kingdev.graphqlclient.subscription.callbacks.ICloseCallback;
 import nl.kingdev.graphqlclient.subscription.callbacks.IReadyCallback;
 import nl.kingdev.graphqlclient.subscription.callbacks.ISubscriptionDataCallback;
 import nl.kingdev.graphqlclient.util.HttpUtil;
 import nl.kingdev.graphqlclient.util.JsonBuilder;
-import org.java_websocket.client.WebSocketClient;
-import org.java_websocket.handshake.ServerHandshake;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -47,15 +48,16 @@ import java.util.concurrent.Executors;
 
 public class Client {
 
-    private String uri;
-    private Map<String, String> headers;
-    private JsonObject globalVariables;
+    private static final Gson gson = new GsonBuilder().create();
+    private final String uri;
+    private final Map<String, String> headers;
+    private final JsonObject globalVariables;
     private ExecutorService executorService;
-    private WebSocketClient webSocketClient;
+    private WebsocketClient websocketClient;
     private int subscriptionID = 1;
-    private List<Subscription> subscriptions = new ArrayList<>();
-    private HttpUtil httpUtil = new HttpUtil();
-    private static Gson gson = new GsonBuilder().create();
+    @Getter()
+    private final List<Subscription> subscriptions = new ArrayList<>();
+    private final HttpUtil httpUtil = new HttpUtil();
 
 
     public Client(String uri) {
@@ -64,6 +66,9 @@ public class Client {
         this.globalVariables = new JsonObject();
     }
 
+    public static Gson getGson() {
+        return gson;
+    }
 
     private JsonObject makeQueryJson(Query query) {
         JsonObject request = new JsonObject();
@@ -71,14 +76,9 @@ public class Client {
 
         JsonObject variables = new JsonObject();
 
-        query.getVariables().entrySet().forEach(e -> {
-            variables.add(e.getKey(), e.getValue());
-        });
+        query.getVariables().entrySet().forEach(e -> variables.add(e.getKey(), e.getValue()));
 
-
-        globalVariables.entrySet().forEach(e -> {
-            variables.add(e.getKey(), e.getValue());
-        });
+        globalVariables.entrySet().forEach(e -> variables.add(e.getKey(), e.getValue()));
 
         request.add("variables", variables);
 
@@ -94,7 +94,7 @@ public class Client {
     public Result query(Query query) {
         try {
             JsonObject request = makeQueryJson(query);
-            return new Result(gson.fromJson(this.httpUtil.post(this.uri, request.toString(), headers), JsonObject.class).get("data").getAsJsonObject());
+            return new Result(this.httpUtil.post(this.uri, request.toString(), headers).get("data").getAsJsonObject());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -128,44 +128,17 @@ public class Client {
 
     /**
      * Creates a websocket to be used for subscriptions (Live data)
+     *
+     * @param readyCallback Called when the websocket is ready
+     * @param closeCallback Called when the websocket closes
      */
     public void setupWebsocket(IReadyCallback readyCallback, ICloseCallback closeCallback) {
         try {
-            this.webSocketClient = new WebSocketClient(new URI(this.uri), new GraphQLDraft()) {
-                @Override
-                public void onOpen(ServerHandshake handshakedata) {
-                    send(new JsonBuilder().append("type", "connection_init").toString());
-                    readyCallback.ready();
-                }
-
-                @Override
-                public void onMessage(String dataString) {
-                    JsonObject data = gson.fromJson(dataString, JsonObject.class);
-
-                    if (data.get("type").getAsString().equals("data")) {
-                        int id = data.get("id").getAsInt();
-                        Subscription subscription = subscriptions.stream().filter(s -> s.getId() == id).findFirst().orElse(null);
-                        if (subscription != null) {
-                            JsonObject payload = data.get("payload").getAsJsonObject();
-                            subscription.getCallback().onData(new Result(payload.get("data").getAsJsonObject()));
-                        }
-                    }
-                }
-
-                @Override
-                public void onClose(int code, String reason, boolean remote) {
-                    closeCallback.close(code, reason, remote);
-                }
-
-                @Override
-                public void onError(Exception ex) {
-                    ex.printStackTrace();
-                }
-            };
-        } catch (Exception e) {
+            this.websocketClient = new WebsocketClient(new URI(uri), readyCallback, closeCallback, this);
+            this.websocketClient.connect();
+        } catch (URISyntaxException e) {
             e.printStackTrace();
         }
-        this.webSocketClient.connect();
     }
 
     /**
@@ -173,10 +146,11 @@ public class Client {
      *
      * @param query    The query for the subscription
      * @param callback The callback to be called for incoming data
+     * @return Subscription
      */
     public Subscription subscribe(Query query, ISubscriptionDataCallback callback) {
-        if (this.webSocketClient != null) {
-            this.webSocketClient.send(new JsonBuilder()
+        if (this.websocketClient != null) {
+            this.websocketClient.send(new JsonBuilder()
                     .append("id", subscriptionID)
                     .append("type", "start")
                     .append("payload", makeQueryJson(query))
@@ -195,7 +169,7 @@ public class Client {
      * Closes all the Subscriptions
      */
     public void closeSubscriptions() {
-        if (this.webSocketClient != null) {
+        if (this.websocketClient != null) {
             Iterator<Subscription> iterator = subscriptions.iterator();
 
             while (iterator.hasNext()) {
@@ -211,12 +185,12 @@ public class Client {
      * Closes the client
      */
     public void closeClient() {
-        closeSubscriptions();
-        if(this.executorService != null) {
+        if (this.executorService != null) {
             this.executorService.shutdownNow();
         }
-        if (this.webSocketClient != null) {
-            this.webSocketClient.close();
+        if (this.websocketClient != null) {
+            closeSubscriptions();
+            this.websocketClient.close();
         }
         this.httpUtil.close();
     }
@@ -244,7 +218,6 @@ public class Client {
         return this;
     }
 
-
     public Client removeHeader(String name) {
         this.headers.remove(name);
         return this;
@@ -255,12 +228,8 @@ public class Client {
         return this;
     }
 
-    public static Gson getGson() {
-        return gson;
-    }
-
     public void closeSubscription(Subscription subscription) {
-        this.webSocketClient.send(new JsonBuilder()
+        this.websocketClient.send(new JsonBuilder()
                 .append("id", subscription.getId())
                 .append("type", "stop")
                 .toString());

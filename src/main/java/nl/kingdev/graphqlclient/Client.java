@@ -219,6 +219,9 @@ public class Client {
             this.websocketClient.close();
         }
         this.httpUtil.close();
+        if(this.resultCache != null) {
+            this.resultCache.close();
+        }
     }
 
     public String getUri() {

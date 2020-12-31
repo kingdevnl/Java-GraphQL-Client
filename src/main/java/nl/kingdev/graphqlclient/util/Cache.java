@@ -19,6 +19,7 @@ public class Cache<T> {
         }, 0, 60000);
     }
 
+
     private static class CacheObject<T> {
         protected T object;
         protected long ttl;
@@ -69,4 +70,9 @@ public class Cache<T> {
         return null;
     }
 
+
+
+    public void close() {
+        this.timer.cancel();
+    }
 }

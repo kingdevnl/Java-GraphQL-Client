@@ -6,6 +6,7 @@ pipeline {
         stage('Setup') {
             steps {
                 sh 'chmod +x gradlew'
+                sh './gradlew updateLicenses'
             }
         }
         stage('Test') {

@@ -35,6 +35,7 @@ import nl.kingdev.graphqlclient.subscription.WebsocketClient;
 import nl.kingdev.graphqlclient.subscription.callbacks.ICloseCallback;
 import nl.kingdev.graphqlclient.subscription.callbacks.IReadyCallback;
 import nl.kingdev.graphqlclient.subscription.callbacks.ISubscriptionDataCallback;
+import nl.kingdev.graphqlclient.util.Cache;
 import nl.kingdev.graphqlclient.util.HttpUtil;
 import nl.kingdev.graphqlclient.util.JsonBuilder;
 
@@ -59,6 +60,7 @@ public class Client {
     private final List<Subscription> subscriptions = new ArrayList<>();
     private final HttpUtil httpUtil = new HttpUtil();
 
+    private Cache<Result> resultCache;
 
     public Client(String uri) {
         this.uri = uri;
@@ -93,8 +95,24 @@ public class Client {
      */
     public Result query(Query query) {
         try {
+            if(resultCache != null) {
+                return resultCache.remember(query.toString(), () -> {
+                    JsonObject request = makeQueryJson(query);
+                    try {
+                        return new Result(this.httpUtil.post(this.uri, request.toString(), headers).get("data").getAsJsonObject());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                });
+            }
             JsonObject request = makeQueryJson(query);
-            return new Result(this.httpUtil.post(this.uri, request.toString(), headers).get("data").getAsJsonObject());
+            try {
+                return new Result(this.httpUtil.post(this.uri, request.toString(), headers).get("data").getAsJsonObject());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -124,6 +142,14 @@ public class Client {
 
     public void setupMultithreading(int numOfThreads) {
         this.executorService = Executors.newFixedThreadPool(numOfThreads);
+    }
+
+    /**
+     * setups the client-side cache
+     * @param ttl time to live
+     */
+    public void useCache(long ttl) {
+        this.resultCache = new Cache<>(ttl);
     }
 
     /**

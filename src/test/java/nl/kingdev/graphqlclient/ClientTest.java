@@ -59,7 +59,6 @@ public class ClientTest {
                 .setVariable("id", "1"))
                 .get("user", User.class);
 
-
         System.out.println(user);
 
         assertNotNull("User is null", user);
